@@ -1,4 +1,4 @@
-import re, torch, nltk, random
+import re
 import numpy as np
 from numpy.linalg import norm
 from nltk.tokenize import word_tokenize, sent_tokenize
@@ -11,7 +11,8 @@ STOPWORDS = stopwords.words("english")
 glove_vecs = KeyedVectors.load_word2vec_format('glove.6B.100d.txt.word2vec', binary=False)
 
 def get_sents(text):
-    return [[w for w in word_tokenize(s) if w not in STOPWORDS] for s in sent_tokenize(clean_text(text))]
+    sents = [s for s in sent_tokenize(clean_text(text))]
+    return [[w for w in word_tokenize(s) if w not in STOPWORDS] for s in sents], sents
 
 def cos_sim(a, b):
     A = np.array(a)
