@@ -25,7 +25,6 @@ def main():
     for ind, row in tqdm(df.iterrows(), total=df.shape[0]):
         scores.append(get_score(row["essay_content"]))
 
-    scores_copy = [c for _, c in scores]
     scores = list(zip(*scores))
 
     df2 = pd.DataFrame(data=scores[0])
@@ -36,15 +35,7 @@ def main():
     df["test_npe_school"] = df2["school"]
     df["test_npe_score"] = [sum([1 for y in x.values() if y > 0]) for x in scores[0]]
     df["test_npe_contexts"] = scores[1]
-    #df.to_excel("output.xlsx")
-
-    df_sents = pd.DataFrame(columns=["sentence"])
-    for essay in scores_copy:
-        for window in essay:
-            for sent in window.values():
-                df_sents.loc[df_sents.shape[0]] = sent
-
-    df_sents.to_excel("evidence_sents.xlsx")
+    df.to_excel("output.xlsx")
 
 if __name__ == "__main__":
     main()
