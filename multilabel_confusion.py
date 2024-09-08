@@ -8,7 +8,7 @@ true = []
 pred = []
 
 for ind, row in df.iterrows():
-    true.append([row["topic_hospital"], row["topic_malaria"], row["topic_farming"], row["topic_school"]])
+    true.append([row["Hospital (NPE)"], row["Malaria (NPE)"], row["Farming (NPE)"], row["School (NPE)"]])
     tmp = [row["test_npe_hospital"], row["test_npe_malaria"], row["test_npe_farming"], row["test_npe_school"]]
     pred.append([min(1, x) for x in tmp])
 

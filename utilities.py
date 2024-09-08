@@ -1,9 +1,11 @@
-import re
+import re, pickle
 import numpy as np
 from numpy.linalg import norm
 from nltk.tokenize import word_tokenize, sent_tokenize
 from nltk.corpus import stopwords
 from gensim.models import KeyedVectors
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
 
 WINDOW = 8
 THRESHOLD = 0.9
@@ -47,6 +49,25 @@ def clean_text(text):
         text += "."
     return text
 
+def get_similarity(sent):
+    vectorizer = CountVectorizer()
+    vectorizer.fit(mvp + [sent])
+    mvp_vecs = vectorizer.transform(mvp).toarray()
+    sent_vec = vectorizer.transform([sent]).toarray()[0]
+
+    mx = 0
+    for vec in mvp_vecs:
+        sim = cos_sim(vec, sent_vec)
+        mx = sim if sim > mx else mx
+    
+    return mx
+
+def predict_quote(sent):
+    with open(f"model.pkl", "rb") as handle:
+        model = pickle.load(handle)
+
+    return model.predict([get_similarity(sent)])
+
 def get_single_topic_dependent(window):
     window = [w for w in window if w not in stopwords.words("english")]
     topic = None
@@ -69,10 +90,32 @@ def get_single_topic_dependent(window):
                 except:
                     continue
     
-    if topic == "hospital" and "malaria" in window:
-        return "malaria"
-    else:
-        return topic
+    # if topic == "hospital" and "malaria" in window:
+    #     return "malaria"
+    # else:
+    return topic
+
+## Could probably just do this while finding the first topic, but this is a quick solution
+def remove_topic(window, topic):
+    topic_words = unique_keywords[topic] + context_keywords[topic]
+    first_pass = [w for w in window if w not in topic_words]
+    final = []
+
+    for word in first_pass:
+        found = False
+
+        for keyword in topic_words:
+            try:
+                if isPlural(keyword, word) or glove_vecs.similarity(word, keyword) >= THRESHOLD:
+                    found = True
+                    break
+            except:
+                continue
+
+        if not found:
+            final.append(word)
+            
+    return final
 
 def isPlural(w1, w2):
     return (w1 + "s" == w2 or w2 + "s" == w1)
@@ -119,3 +162,5 @@ unique_keywords = {"hospital" : ["health", "hospital", "treatment", "doctor", "m
                    "school"   : ["school", "student", "meal", "lunch", "book", "paper", "pencil", "attend"]}
 
 inv_keywords_split = {w : k for k, v in unique_keywords.items() for w in v}
+
+mvp = get_sents(clean_text("".join(open("mvp.txt").readlines())))[1]

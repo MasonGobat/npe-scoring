@@ -7,16 +7,23 @@ def get_score(text):
     windows = sents[0]
     topics = {"hospital" : 0, "malaria" : 0, "farming" : 0, "school" : 0}
     topics_context = []
+    #sim = 0
+    #c = 0
 
     for i in range(len(windows)):
         window = windows[i]
+
         topic = util.get_single_topic_dependent(window)
-
-        if topic != None:
+        while (topic != None):
             topics[topic] += 1
+            #sim += util.get_similarity(sents[1][i])
+            #c += 1
             topics_context.append({topic : sents[1][i]})
+            window = util.remove_topic(window, topic)
+            topic = util.get_single_topic_dependent(window)
+            
 
-    return topics, topics_context
+    return topics, topics_context#, (sim / c if c > 0 else 0)
 
 def main():
     df = pd.read_excel("human_computer_npe_full.xlsx")
@@ -35,6 +42,7 @@ def main():
     df["test_npe_school"] = df2["school"]
     df["test_npe_score"] = [sum([1 for y in x.values() if y > 0]) for x in scores[0]]
     df["test_npe_contexts"] = scores[1]
+    #df["avg_similarity"] = scores[2]
     df.to_excel("output.xlsx")
 
 if __name__ == "__main__":
